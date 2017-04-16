@@ -4,11 +4,17 @@ from operator import add
 from pyspark.mllib.clustering import KMeans, KMeansModel
 from csv import reader
 
+# Data exploration using Pyspark
+# PART I
+# Validity per column & integrity. 
+
 csvfile = sc.textFile('NYPD_crime.csv')
 crimedata = csvfile.mapPartitions(lambda x: reader(x))
 #crimedata = csvfile.map(lambda line: line.split(','))
 
-# crimedata.count()
+# Count rows, check is complete: 
+crimedata.count()
+# This still has col names in first row. 
 
 column_names = crimedata.take(1)[0]
 crimedata = crimedata.filter(lambda line: line != column_names )
@@ -39,17 +45,25 @@ spark.sql("SELECT is_valid, count(is_valid) from (SELECT CMPLNT_NUM ,'integer' A
 # Col 2 ----- CMPLNT_FR_DT
 # Exact date of occurrence for the reported event
 
+# Unique years
 spark.sql("SELECT distinct( SUBSTRING(CMPLNT_FR_DT,7,4)) from df ").show()
+
+# Minimum
 spark.sql("SELECT min( int(SUBSTRING(CMPLNT_FR_DT,7,4))) from df limit 500").show()
 
+# Maximum
+spark.sql("SELECT max( int(SUBSTRING(CMPLNT_FR_DT,7,4))) from df limit 500").show()
 
+# Validity
 spark.sql("SELECT CMPLNT_FR_DT ,'timestamp' AS base_type ,'date of occurrence' AS semantic_type, CASE WHEN CMPLNT_FR_DT = '' THEN 'null' WHEN SUBSTRING(CMPLNT_FR_DT,1,2) IN ('12','11','10','09','08','07','06','05','04','03','02','01') AND SUBSTRING(CMPLNT_FR_DT,4,2) IN ('01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31') AND int(SUBSTRING(CMPLNT_FR_DT,7,4)) > 1900 AND int(SUBSTRING(CMPLNT_FR_DT,7,4)) < 2018 THEN 'valid' ELSE 'invalid' END AS is_valid from df").show()
 spark.sql("SELECT is_valid, count(is_valid) from (SELECT CMPLNT_FR_DT ,'timestamp' AS base_type ,'date of occurrence' AS semantic_type, CASE WHEN CMPLNT_FR_DT = '' THEN 'null' WHEN SUBSTRING(CMPLNT_FR_DT,1,2) IN ('12','11','10','09','08','07','06','05','04','03','02','01') AND SUBSTRING(CMPLNT_FR_DT,4,2) IN ('01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31') AND int(SUBSTRING(CMPLNT_FR_DT,7,4)) > 1900 AND int(SUBSTRING(CMPLNT_FR_DT,7,4)) < 2018 THEN 'valid' ELSE 'invalid' END AS is_valid from df) group by is_valid").show()
 
 # COL 3 ---- time of occurrence: CMPLNT_FR_TM
 
+# Check first values to see format: 
 spark.sql("SELECT CMPLNT_FR_TM from df ").show()
 
+# Filter by validity: 
 spark.sql("SELECT CMPLNT_FR_TM ,'timestamp' AS base_type ,'time of occurrence' AS semantic_type, CASE WHEN CMPLNT_FR_TM = '' THEN 'null' WHEN int(SUBSTRING(CMPLNT_FR_DT,1,2)) <= 23 AND  int(SUBSTRING(CMPLNT_FR_DT,1,2)) >=0 AND SUBSTRING(CMPLNT_FR_DT,4,2) < 60 AND SUBSTRING(CMPLNT_FR_DT,4,2) >= 0 AND SUBSTRING(CMPLNT_FR_DT,7,2) < 60 AND SUBSTRING(CMPLNT_FR_DT,7,2) >= 0 THEN 'valid' ELSE 'invalid' END AS is_valid from df").show()
 spark.sql("SELECT is_valid, count(is_valid) from (SELECT CMPLNT_FR_TM ,'timestamp' AS base_type ,'time of occurrence' AS semantic_type, CASE WHEN CMPLNT_FR_TM = '' THEN 'null' WHEN int(SUBSTRING(CMPLNT_FR_DT,1,2)) <= 23 AND  int(SUBSTRING(CMPLNT_FR_DT,1,2)) >=0 AND SUBSTRING(CMPLNT_FR_DT,4,2) < 60 AND SUBSTRING(CMPLNT_FR_DT,4,2) >= 0 AND SUBSTRING(CMPLNT_FR_DT,7,2) < 60 AND SUBSTRING(CMPLNT_FR_DT,7,2) >= 0 THEN 'valid' ELSE 'invalid' END AS is_valid from df) group by is_valid").show()
 
@@ -76,14 +90,17 @@ spark.sql("SELECT is_valid, count(is_valid) from (SELECT RPT_DT ,'timestamp' AS 
 # COL 7 --- KY_CD 
 # Three digit offense classification code
 
+# Min and Max values: 
 spark.sql("SELECT min(KY_CD) FROM df limit 100").show()
+spark.sql("SELECT max(KY_CD) FROM df limit 100").show()
 
 spark.sql("SELECT KY_CD ,'integer' AS base_type ,'classification code' AS semantic_type, CASE WHEN KY_CD = '' THEN 'null' WHEN int(KY_CD) > 99 AND int(KY_CD) < 1000 THEN 'valid' ELSE 'invalid' END AS is_valid from df").show()
-spark.sql("SELECT distinct is_valid from (SELECT KY_CD ,'integer' AS base_type ,'classification code' AS semantic_type, CASE WHEN KY_CD = '' THEN 'null' WHEN int(KY_CD) > 99 AND int(KY_CD) < 1000 THEN 'valid' ELSE 'invalid' END AS is_valid from df)").show()
 spark.sql("SELECT is_valid, count(is_valid) from (SELECT KY_CD ,'integer' AS base_type ,'classification code' AS semantic_type, CASE WHEN KY_CD = '' THEN 'null' WHEN int(KY_CD) > 99 AND int(KY_CD) < 1000 THEN 'valid' ELSE 'invalid' END AS is_valid from df) group by is_valid").show()
 
 # Col 8 --- OFNS_DESC
 # Description of offense corresponding with key code
+
+# See some: 
 spark.sql("SELECT distinct OFNS_DESC FROM df limit 100").show(2000)
 
 spark.sql("SELECT OFNS_DESC ,'text' AS base_type ,'offense description' AS semantic_type, CASE WHEN OFNS_DESC = '' THEN 'null' WHEN OFNS_DESC NOT LIKE '%[^0-9]%' THEN 'valid' ELSE 'invalid' END AS is_valid from df").show()
@@ -92,7 +109,15 @@ spark.sql(" SELECT is_valid, count(is_valid) from (SELECT OFNS_DESC ,'text' AS b
 # Col 9 --- PD_CD
 # Three digit internal classification code (more granular than Key Code)
 
+# Show some rows:
 spark.sql("SELECT PD_CD, count(PD_CD) FROM df group by PD_CD").show(2000)
+
+# Min and max: 
+spark.sql("SELECT min(PD_CD) FROM df limit 100").show()
+spark.sql("SELECT max(PD_CD) FROM df limit 100").show()
+spark.sql("SELECT min(PD_CD) FROM df WHERE PD_CD!=''").show()
+
+
 
 spark.sql("SELECT PD_CD ,'integer' AS base_type ,'internal code' AS semantic_type, CASE WHEN PD_CD = '' THEN 'null' WHEN PD_CD not LIKE '%[^0-9]%' THEN 'valid' ELSE 'invalid' END AS is_valid from df").show()
 spark.sql("SELECT is_valid, count(is_valid) from (SELECT PD_CD ,'integer' AS base_type ,'internal code' AS semantic_type, CASE WHEN PD_CD = '' THEN 'null' WHEN PD_CD NOT LIKE '%[^0-9]%' THEN 'valid' ELSE 'invalid' END AS is_valid from df) group by is_valid").show()
@@ -142,6 +167,10 @@ spark.sql("SELECT is_valid, count(is_valid) from (SELECT BORO_NM ,'text' AS base
 
 spark.sql("SELECT ADDR_PCT_CD, count(ADDR_PCT_CD) FROM df group by ADDR_PCT_CD").show(2000)
 
+# MAX AND MIN: 
+spark.sql("SELECT min(int(ADDR_PCT_CD)) FROM df WHERE ADDR_PCT_CD!=''").show()
+spark.sql("SELECT max(int(ADDR_PCT_CD)) FROM df").show()
+
 spark.sql("SELECT ADDR_PCT_CD, 'integer' AS base_type ,'precinct' AS semantic_type, CASE WHEN ADDR_PCT_CD = '' THEN 'null' WHEN ADDR_PCT_CD not like '%[^0-9]%' THEN 'valid' ELSE 'invalid' END AS is_valid from df").show()
 spark.sql("SELECT is_valid, count(is_valid) from (SELECT ADDR_PCT_CD, 'integer' AS base_type ,'precinct' AS semantic_type, CASE WHEN ADDR_PCT_CD = '' THEN 'null' WHEN ADDR_PCT_CD not like '%[^0-9]%' THEN 'valid' ELSE 'invalid' END AS is_valid from df) group by is_valid").show()
 
@@ -166,12 +195,20 @@ spark.sql("SELECT PARKS_NM, count(PARKS_NM) FROM df group by PARKS_NM").show(200
 spark.sql("SELECT PARKS_NM,'text' AS base_type ,'park name' AS semantic_type, CASE WHEN PARKS_NM IN ('',' ') THEN 'null' WHEN PARKS_NM NOT LIKE '%[^0-9]%' THEN 'valid' ELSE 'invalid' END AS is_valid from df").show()
 spark.sql("SELECT is_valid, count(is_valid) from (SELECT PARKS_NM,'text' AS base_type ,'park name' AS semantic_type, CASE WHEN PARKS_NM IN ('',' ') THEN 'null' WHEN PARKS_NM NOT LIKE '%[^0-9]%' THEN 'valid' ELSE 'invalid' END AS is_valid from df) group by is_valid").show()
 
+
+ # --  See what PREM_TYP_DESC are when parks is not null. NOT CONSISSTENT
+spark.sql("SELECT PREM_TYP_DESC, count(PREM_TYP_DESC) FROM df  WHERE PARKS_NM!='' AND PARKS_NM!=' ' group by PREM_TYP_DESC").show(2000)
+
 # Col 19 --- HADEVELOPT
 # Name of NYCHA housing development of occurrence, if applicable
 spark.sql("SELECT HADEVELOPT, count(HADEVELOPT) FROM df group by HADEVELOPT").show(2000)
 
 spark.sql("SELECT HADEVELOPT,'text' AS base_type ,'NYCHA housing' AS semantic_type, CASE WHEN HADEVELOPT IN ('',' ') THEN 'null' WHEN HADEVELOPT not LIKE '%[^0-9]%' THEN 'valid' ELSE 'invalid' END AS is_valid from df").show()
 spark.sql("SELECT is_valid, count(is_valid) from (SELECT HADEVELOPT,'text' AS base_type ,'park name' AS semantic_type, CASE WHEN HADEVELOPT IN ('',' ') THEN 'null' WHEN HADEVELOPT not LIKE '%[^0-9]%' THEN 'valid' ELSE 'invalid' END AS is_valid from df) group by is_valid").show()
+
+  # --  See what PREM_TYP_DESC are when parks is not null. NOT CONSISSTENT
+spark.sql("SELECT PREM_TYP_DESC, count(PREM_TYP_DESC) FROM df  WHERE HADEVELOPT!='' AND HADEVELOPT!=' ' group by PREM_TYP_DESC").show(2000)
+
 
 # Col 20 --- X_COORD_CD
 # X-coordinate for New York State Plane Coordinate System, Long Island Zone, NAD 83, units feet (FIPS 3104)"
@@ -188,6 +225,10 @@ spark.sql("SELECT Y_COORD_CD FROM df order by Y_COORD_CD limit 50").show(2000)
 spark.sql("SELECT Y_COORD_CD,'integer' AS base_type ,'Y-coordinate NAD 83' AS semantic_type, CASE WHEN Y_COORD_CD IN ('',' ') THEN 'null' WHEN Y_COORD_CD not LIKE '%[^0-9]%' THEN 'valid' ELSE 'invalid' END AS is_valid from df").show()
 spark.sql("SELECT is_valid, count(is_valid) from (SELECT Y_COORD_CD,'integer' AS base_type ,'Y-coordinate NAD 83' AS semantic_type, CASE WHEN Y_COORD_CD IN ('',' ') THEN 'null' WHEN Y_COORD_CD not LIKE '%[^0-9]%' THEN 'valid' ELSE 'invalid' END AS is_valid from df) group by is_valid").show()
 
+   # --  Check that they are nulls together (X_COORD_CD and Y_COORD_CD): 
+spark.sql("SELECT Y_COORD_CD, count(Y_COORD_CD) FROM df WHERE X_COORD_CD=='' OR X_COORD_CD==' ' group by Y_COORD_CD").show(2000)
+
+
 # Col 22 --- Latitude,
 # Latitude coordinate for Global Coordinate System, WGS 1984, decimal degrees (EPSG 4326) "
 spark.sql("SELECT Latitude FROM df limit 50").show(2000)
@@ -201,6 +242,8 @@ spark.sql("SELECT is_valid, count(is_valid) from (SELECT Latitude,'float' AS bas
 spark.sql("SELECT Longitude,'float' AS base_type ,'Longitude' AS semantic_type, CASE WHEN Longitude IN ('',' ') THEN 'null' WHEN Longitude < -73.700009 AND Longitude > -74.25909  THEN 'valid' ELSE 'invalid' END AS is_valid from df").show()
 spark.sql("SELECT is_valid, count(is_valid) from (SELECT Longitude,'float' AS base_type ,'Longitude' AS semantic_type, CASE WHEN Longitude IN ('',' ') THEN 'null' WHEN Longitude < -73.700009 AND Longitude > -74.25909  THEN 'valid' ELSE 'invalid' END AS is_valid from df) group by is_valid").show()
 
+   # --  Check that they are nulls together (Latitude and Y_COORD_CD): 
+spark.sql("SELECT Longitude, count(Longitude) FROM df WHERE Latitude=='' OR Latitude==' ' group by Longitude").show(2000)
 
 
 
