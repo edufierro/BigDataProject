@@ -3,6 +3,7 @@
 import numpy as np
 from operator import add
 from csv import reader
+from pyspark import SparkContext
 
 # Data exploration using Pyspark
 # PART II
@@ -14,6 +15,7 @@ def data_import_reader(file_path, filename="NYPD_crime.csv", rm_header=True):
         Over lines'''
     ''' RETURNS DATA WITH NO HEADER BY DEFAULT'''
     
+    sc = SparkContext()
     data_file = sc.textFile(file_path + filename)
     lines = data_file.mapPartitions(lambda x: reader(x))
     
