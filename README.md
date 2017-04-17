@@ -8,7 +8,7 @@ Preliminary settings:
   - Execute the shell commands
   
   
-Steps for running the dataForVisualization.py script:
+# Steps for running the dataForVisualization.py script:
   - After executing the shell commands, run the following command to execute this python script:
     ' spark-submit dataForVisualization.py '
   - This will execute the code and save 4 files in HDFS. 
@@ -20,6 +20,6 @@ Steps for running the dataForVisualization.py script:
   - It can be viewed by running the following command
     ' hfs -ls '
     
-Steps for running the Integrity.py script:
+# Steps for running the Integrity.py script:
   - Fire up pyspark2 (as given in the shell command)
   - Run every command in the script
