@@ -14,6 +14,11 @@ from pyspark.sql import SQLContext
 
 # Data to analyze Crime data near 
 #   baseball stadiums during game-day. 
+# RUN pyspark2-submit BaseballAnalysis.py >> BaseballAnalysis.txt
+
+# Generates dataframe separated by commas
+# Distance to stadium, crime, stadium (Mets/Yankees), intercept, coefficient, pvalue. 
+# Missing values coded -99999 for simplicity. 
 
 def data_import_reader(file_path, filename="NYPD_crime.csv", rm_header=True): 
     
