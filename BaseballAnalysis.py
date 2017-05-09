@@ -14,11 +14,6 @@ from pyspark.sql import SQLContext
 
 # Data to analyze Crime data near 
 #   baseball stadiums during game-day. 
-# RUN pyspark2-submit BaseballAnalysis.py >> BaseballAnalysis.txt
-
-# Generates dataframe separated by commas
-# Distance to stadium, crime, stadium (Mets/Yankees), intercept, coefficient, pvalue. 
-# Missing values coded -99999 for simplicity. 
 
 def data_import_reader(file_path, filename="NYPD_crime.csv", rm_header=True): 
     
@@ -91,7 +86,7 @@ def game_day(mydata, baseball):
     baseball_map = baseball.map(lambda x: (x[-1], x[-3]))
         
     mydata2 = mydata2.leftOuterJoin(baseball_map)  
-    mydata2 = mydata2.map(lambda x: (x[0], (x[1][0][0], x[1][0][1], x[1][0][2], x[1][1], 'gameday')) if x[1][1] else ((x[0], (x[1][0][0], x[1][0][1], x[1][0][2], 'Yankees', 'not_gameday')) if float(x[1][0][1])>40.80  else (x[0], (x[1][0][0], x[1][0][1], x[1][0][2], 'Mets', 'not_gameday'))))   
+    mydata2 = mydata2.map(lambda x: ((x[0], (x[1][0][0], x[1][0][1], x[1][0][2],'Yankees', 'gameday')) if float(x[1][0][1])>40.80 else (x[0], (x[1][0][0], x[1][0][1], x[1][0][2],'Mets', 'gameday'))) if x[1][1] else ((x[0], (x[1][0][0], x[1][0][1], x[1][0][2], 'Yankees', 'not_gameday')) if float(x[1][0][1])>40.80  else (x[0], (x[1][0][0], x[1][0][1], x[1][0][2], 'Mets', 'not_gameday'))))              
         
     return mydata2
     
@@ -99,10 +94,10 @@ def complete_dates():
     
     ''' Generates RDD of complete days between 2009 and 2016
         Returns: @datelist: RDD object with string list of all days between 
-                 January 1 2009 and January 1 2016'''
+                 January 1 2009 and December 31 2015'''
         
     date_list = []
-    for year in range(2009, 2017):
+    for year in range(2009, 2016):
         for month in range(1, 13):
             if month == 2: 
                 for day in range(1, 29): 
@@ -116,7 +111,6 @@ def complete_dates():
             
     # Append 29 of february: 
     date_list.append(str(2).zfill(2) + "/" + str(29).zfill(2) + "/" + str(2012))
-    date_list.append(str(2).zfill(2) + "/" + str(29).zfill(2) + "/" + str(2016))
     
     return sc.parallelize(date_list)          
     

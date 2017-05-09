@@ -85,7 +85,7 @@ def game_day(mydata, baseball):
     baseball_map = baseball.map(lambda x: (x[-1], x[-3]))
         
     mydata2 = mydata2.leftOuterJoin(baseball_map)  
-    mydata2 = mydata2.map(lambda x: (x[0], (x[1][0][0], x[1][0][1], x[1][0][2], x[1][1], 'gameday')) if x[1][1] else ((x[0], (x[1][0][0], x[1][0][1], x[1][0][2], 'Yankees', 'not_gameday')) if float(x[1][0][1])>40.80  else (x[0], (x[1][0][0], x[1][0][1], x[1][0][2], 'Mets', 'not_gameday'))))   
+    mydata2 = mydata2.map(lambda x: ((x[0], (x[1][0][0], x[1][0][1], x[1][0][2],'Yankees', 'gameday')) if float(x[1][0][1])>40.80 else (x[0], (x[1][0][0], x[1][0][1], x[1][0][2],'Mets', 'gameday'))) if x[1][1] else ((x[0], (x[1][0][0], x[1][0][1], x[1][0][2], 'Yankees', 'not_gameday')) if float(x[1][0][1])>40.80  else (x[0], (x[1][0][0], x[1][0][1], x[1][0][2], 'Mets', 'not_gameday'))))
         
     return mydata2
     
