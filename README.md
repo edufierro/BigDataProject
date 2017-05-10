@@ -78,3 +78,21 @@ To run all the codes correctly, please install the following libraries:
   - XML
   - httr  
   - doBy
+  
+  
+# Steps for running the hypothesis_testing.py script
+  
+Note: This module is to verify the hypothesis on demographics data. The hypothesis is well documented in the report. Also, the data file being used is poverty_data_borough.csv. This data was consioldated using the 20 data files collected from the American factfinder site. The steps required to execute the hypothesis_testing.py script
+
+- Execute the shell commands from the preliminary settings. 
+- Make sure that the file path is same as the data file.
+- Fire up pyspark2.
+- Run one by one the code in the hypothesis_testing.py script.
+ 
+ 
+# Steps to produce the visualization using ipython notebook
+
+- The code to produce the visualizations for both crime data and poverty data is there in the repo.
+- Open the script (python notebook) and you can choose the option restart-run all to produce the graphs. Make sure that the file path is same where the 20 csv files are located.
+- The ipython notebook is "census_analysis.ipynb"
+

@@ -1,0 +1,19 @@
+# there should be 11 distinct values
+
+spark.sql("SELECT COUNT (DISTINCT Borough) FROM df").show()
+
++----+
+|Year|
++----+
+|2012|
+|2014|
+|2013|
+|2005|
+|2009|
+|2006|
+|2011|
+|2008|
+|2007|
+|2015|
+|2010|
++----+
