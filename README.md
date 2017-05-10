@@ -53,7 +53,7 @@ All codes were run and tested on DUMBO, NYU's 48-node Hadoop cluster, running Cl
     3. subset1000.out
     4. subset2000.out
 
-# Steps for running the BaseballDataDescriptivesGenerator.py script:
+# Steps for running the BaseballAnalysis.py script:
   - After executing the shell commands, run the following command to execute this python script:
     ' spark2-submit BaseballAnalysis.py >> BaseballAnalysis.txt'
     
