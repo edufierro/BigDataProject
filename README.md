@@ -88,4 +88,11 @@ Note: This module is to verify the hypothesis on demographics data. The hypothes
 - Make sure that the file path is same as the data file.
 - Fire up pyspark2.
 - Run one by one the code in the hypothesis_testing.py script.
-  
+ 
+ 
+# Steps to produce the visualization using ipython notebook
+
+- The code to produce the visualizations for both crime data and poverty data is there in the repo.
+- Open the code and you can choose the option restart-run all to produce the graphs. Make sure that the file path is same where the 20 csv files are located.
+- the ipython notebook is "census_analysis.ipynb"
+
